@@ -1,0 +1,15 @@
+[project]
+name = "zero-mcp-server"
+version = "0.1.0"
+description = "MCP server for the Zero Network — lets AI agents understand, integrate, and transact on Zero"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project.scripts]
+zero-mcp = "zero_mcp.server:main"
