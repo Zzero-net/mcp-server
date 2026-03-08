@@ -1,11 +1,29 @@
 [project]
-name = "zero-mcp-server"
+name = "zero-network-mcp"
 version = "0.1.0"
 description = "MCP server for the Zero Network — lets AI agents understand, integrate, and transact on Zero"
+readme = "README.md"
+license = "MIT"
 requires-python = ">=3.10"
+authors = [{name = "Zero Network", email = "dev@zzero.net"}]
+keywords = ["zero", "mcp", "ai-agents", "micropayments", "stablecoin"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
 dependencies = [
     "mcp[cli]>=1.0.0",
 ]
+
+[project.urls]
+Homepage = "https://mcp.zzero.net"
+Documentation = "https://docs.zzero.net"
+Repository = "https://github.com/Zzero-net/mcp-server"
+
+[tool.hatch.build.targets.wheel]
+packages = ["zero_mcp"]
 
 [build-system]
 requires = ["hatchling"]
