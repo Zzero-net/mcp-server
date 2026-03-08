@@ -33,8 +33,8 @@ A permissionless, decentralized stablecoin microtransaction network for users an
 - Per-account rate limit: 100 tx/s
 
 ## Bridge
-- Bridge in: Lock USDC/USDT on Base or Arbitrum → mint Z on Zero (1 USDC = 100 Z)
-- Bridge out: Burn Z on Zero → release USDC/USDT on Base or Arbitrum
+- Bridge in: Lock USDC on Base or USDT on Arbitrum → mint Z on Zero (1 USDC = 100 Z)
+- Bridge out: Burn Z on Zero → release USDC on Base or USDT on Arbitrum
 - Trinity Validators (3 trusted parties, 2-of-3 multisig) control all mint/burn operations
 - Circuit breaker: <=20% TVL/24h normal, 20-50% requires 3-of-3, >50% auto-pauses
 
