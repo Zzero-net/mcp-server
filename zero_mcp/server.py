@@ -21,7 +21,7 @@ A permissionless, decentralized stablecoin microtransaction network for users an
 - 1 Z = $0.01 USD (one penny), backed 1:1 by USDC/USDT locked in vault contracts
 - Transaction fee: 0.01 Z ($0.0001) flat, always
 - Finality: <500ms
-- Transaction size: 100 bytes on wire
+- Transaction size: 136 bytes on wire
 - No smart contracts, no VM, no gas market — transfer-only ledger
 - Permissionless: anyone can create an account (just an Ed25519 keypair)
 
@@ -29,7 +29,7 @@ A permissionless, decentralized stablecoin microtransaction network for users an
 - Smallest unit: 0.01 Z (1 unit = $0.0001)
 - Min transaction: 0.01 Z amount + 0.01 Z fee = 0.02 Z total ($0.0002)
 - Max transaction: 25 Z ($0.25)
-- Account creation: 1.00 Z ($0.01) one-time fee on first receive
+- Account creation: 5.00 Z ($0.05) one-time fee on first receive
 - Per-account rate limit: 100 tx/s
 
 ## Bridge
@@ -46,8 +46,8 @@ A permissionless, decentralized stablecoin microtransaction network for users an
 - Custom Rust implementation
 
 ## Fee Split
-- 50% to validators (proportional to stake)
-- 35% to bridge reserve (vault contract gas)
+- 70% to validators (proportional to stake)
+- 15% to bridge reserve (vault contract gas)
 - 15% to protocol reserve
 
 ## Links
@@ -57,7 +57,7 @@ A permissionless, decentralized stablecoin microtransaction network for users an
 - GitHub: https://github.com/Zzero-net
 """
 
-TRANSACTION_FORMAT = """# Zero Transaction Format (100 bytes)
+TRANSACTION_FORMAT = """# Zero Transaction Format (136 bytes)
 
 ```
 ZeroTransfer {
@@ -65,9 +65,9 @@ ZeroTransfer {
     to:        [32 bytes]  // Ed25519 public key (recipient)
     amount:    [4 bytes]   // u32, in units (1 unit = 0.01 Z = $0.0001)
     nonce:     [4 bytes]   // u32, per-account monotonic counter
-    signature: [28 bytes]  // Ed25519 truncated (224-bit security)
+    signature: [64 bytes]  // Ed25519 full signature
 }
-// Total: 100 bytes
+// Total: 136 bytes
 ```
 
 ## Amount Encoding
@@ -89,19 +89,19 @@ Account {
 ## Cryptographic Primitives
 - Signatures: Ed25519 (ed25519-dalek with verify_strict)
 - Hashing: BLAKE3 (256-bit, hardware-accelerated)
-- Wire signature: 28-byte truncation (full 64-byte verified internally)
+- Wire signature: Full 64-byte Ed25519 signature
 """
 
 PYTHON_SDK = """# Zero Python SDK
 
 ## Installation
 ```bash
-pip install zero-sdk
+pip install zero-network
 ```
 
 ## Quick Start (4 lines)
 ```python
-from zero import Wallet
+from zero_network import Wallet
 
 w = Wallet.from_env()             # reads ZERO_KEY env var
 w.send("zr_recipient", 10)       # send 0.10 Z, fee: 0.01 Z auto-deducted
@@ -110,7 +110,7 @@ print(w.balance())                # check balance
 
 ## Create a New Wallet
 ```python
-from zero import Wallet
+from zero_network import Wallet
 
 w = Wallet.create()               # generate Ed25519 keypair
 print(w.address)                  # zr_7f3a...2b1c
@@ -185,7 +185,7 @@ Zero is the native settlement layer for the x402 HTTP payment protocol.
 
 ## Server (Python FastAPI)
 ```python
-from zero_sdk import x402_gate
+from zero_network.x402 import x402_gate
 
 @app.get("/api/search")
 @x402_gate(amount=10)  # 0.10 Z per call
@@ -206,7 +206,8 @@ app.get('/api/data', paywall.gate(5), async (req, res) => {
 
 ## Client (Auto-Pay)
 ```python
-from zero_sdk import Wallet, x402_fetch
+from zero_network import Wallet
+from zero_network.x402 import x402_fetch
 
 w = Wallet.from_env()
 result = await x402_fetch(
@@ -236,7 +237,7 @@ Charge AI agents per tool call using Zero micropayments.
 ## Server Implementation (Python)
 ```python
 from mcp.server import Server
-from zero import Wallet
+from zero_network import Wallet
 
 server = Server("my-paid-tools")
 wallet = Wallet.from_env()
@@ -265,8 +266,8 @@ async def gen_image(prompt: str):
 ## Client Implementation
 ```python
 from mcp.client import Client
-from zero.mcp import ZeroPaymentHandler
-from zero import Wallet
+from zero_network import Wallet
+from zero_network.mcp import ZeroPaymentHandler
 
 wallet = Wallet.from_env()
 handler = ZeroPaymentHandler(wallet=wallet)
@@ -296,7 +297,7 @@ result = await client.call_tool("web_search", {"query": "AI research"})
 
 ## Spending Limits
 ```python
-from zero.spending import SpendingPolicy
+from zero_network.spending import SpendingPolicy
 
 policy = SpendingPolicy(
     max_per_call=25,       # 0.25 Z max per single payment
@@ -382,17 +383,17 @@ NETWORK_PARAMETERS = """# Zero Network Parameters
 | Z peg | 1 Z = $0.01 | Fixed, backed 1:1 by USDC/USDT |
 | Units per Z | 100 | 1 unit = $0.0001 |
 | Transaction fee | 0.01 Z (1 unit) | $0.0001 flat per tx |
-| Account creation fee | 1.00 Z | $0.01 one-time on first receive |
+| Account creation fee | 5.00 Z | $0.05 one-time on first receive |
 | Max transfer | 25 Z (2,500 units) | $0.25 per transaction |
 | Min send balance | 1 Z | Accounts below this can only receive |
 | Per-account rate limit | 100 tx/s | Sliding window |
 | Finality target | <500ms | Deterministic |
-| Transaction size | 100 bytes | Wire format |
+| Transaction size | 136 bytes | Wire format |
 | Account state | 48 bytes | Balance + nonce + head + flags |
 | Max validators | 1,024 | Ranked by stake |
 | Min validator stake | 10,000 Z ($100) | Permissionless entry |
 | Unbonding period | 7 days | Prevents stake-and-slash |
-| Fee split | 50/35/15 | Validators / Bridge reserve / Protocol |
+| Fee split | 70/15/15 | Validators / Bridge reserve / Protocol |
 | Slashing (equivocation) | 100% stake burned | Double-signing |
 | Slashing (downtime) | 10% stake burned | Extended inactivity |
 | Slashing (bad attestation) | 100% stake burned | Invalid bridge attestation |
@@ -444,7 +445,7 @@ zero-node run
 - Slashed funds go to protocol reserve
 
 ## Economics
-- Validators earn 50% of all transaction fees, proportional to stake
+- Validators earn 70% of all transaction fees, proportional to stake
 - At 100M daily tx with 100 validators: ~$50/day each
 - At 1B daily tx with 100 validators: ~$500/day each
 """
@@ -476,7 +477,7 @@ SECURITY_MODEL = """# Zero Security Model
 | Attack | Mitigation |
 |--------|-----------|
 | Transaction spam | Per-account rate limit (100 tx/s) + flat fee |
-| Dust account spam | Account creation fee (1 Z) |
+| Dust account spam | Account creation fee (5 Z) |
 | State bloat | Ring buffer + dust pruning |
 | Validator equivocation | 100% stake slash + immediate ejection |
 | Validator downtime | 10% stake slash + trust score degradation |
@@ -493,8 +494,8 @@ IMPLEMENTATION_GUIDE = """# Implementing Zero Payments
 
 ### Step 1: Create a Zero Wallet
 ```bash
-pip install zero-sdk
-python -c "from zero import Wallet; w = Wallet.create(); print(f'Address: {w.address}\\nKey: {w.secret_b64}')"
+pip install zero-network
+python -c "from zero_network import Wallet; w = Wallet.create(); print(f'Address: {w.address}\\nKey: {w.secret_b64}')"
 ```
 Save the key securely. Set as environment variable:
 ```bash
@@ -504,7 +505,7 @@ export ZERO_ADDRESS="zr_your_address"
 
 ### Step 2: Add x402 Middleware
 ```python
-from zero_sdk import x402_gate
+from zero_network.x402 import x402_gate
 
 @app.get("/api/your-endpoint")
 @x402_gate(amount=5)  # 0.05 Z per call
@@ -571,7 +572,7 @@ def zero_overview() -> str:
 
 @mcp.tool()
 def zero_transaction_format() -> str:
-    """Get the Zero transaction wire format (100 bytes), account state format (48 bytes), and cryptographic primitives."""
+    """Get the Zero transaction wire format (136 bytes), account state format (48 bytes), and cryptographic primitives."""
     return TRANSACTION_FORMAT
 
 

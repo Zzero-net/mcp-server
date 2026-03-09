@@ -1,6 +1,6 @@
 [project]
 name = "zero-network-mcp"
-version = "0.1.0"
+version = "0.1.1"
 description = "MCP server for the Zero Network — lets AI agents understand, integrate, and transact on Zero"
 readme = "README.md"
 license = "MIT"
