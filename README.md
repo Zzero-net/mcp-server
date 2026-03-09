@@ -8,7 +8,7 @@ An MCP server that gives AI agents instant access to Zero Network documentation,
 | Tool | Description |
 |------|-------------|
 | `zero_overview` | Network overview — what Zero is, core facts, architecture, links |
-| `zero_transaction_format` | 100-byte wire format, 48-byte account state, crypto primitives |
+| `zero_transaction_format` | 136-byte wire format, 48-byte account state, crypto primitives |
 | `zero_python_sdk` | Python SDK — install, wallet, send, bridge, env vars |
 | `zero_javascript_sdk` | JavaScript SDK — install, wallet, send, env vars |
 | `zero_x402_integration` | x402 HTTP payment protocol — server middleware, client auto-pay |
